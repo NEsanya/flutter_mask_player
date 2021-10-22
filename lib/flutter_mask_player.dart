@@ -6,17 +6,18 @@ import 'package:flutter/widgets.dart';
 
 /// Types of events in [MaskPlayerController].
 enum MaskPlayerControllerEvent {
-  loading,
   initialize
 }
 
+/// [MaskPlayerController] player data, where media gets from assets.
 class AssetsPlayerData {
-  final String assetsPath;
-  final String? maskAssetsPath;
+  final String path;
+  final String? maskPath;
 
-  AssetsPlayerData({required this.assetsPath, this.maskAssetsPath});
+  AssetsPlayerData({ required this.path, this.maskPath });
 }
 
+/// [MaskPlayerController] player data, where media gets from network.
 class NetworkPlayerData {
   final String url;
   final String? headers;
@@ -135,6 +136,8 @@ class MaskPlayer extends StatefulWidget {
 }
 
 class _MaskPlayerState extends State<MaskPlayer> {
+  final GlobalKey _repaintKey = GlobalKey();
+
   StreamSubscription<MaskPlayerControllerEvent>? _controllerEventStreamSubscription;
   MaskPlayerControllerEvent? _currentEvent;
 
@@ -160,8 +163,6 @@ class _MaskPlayerState extends State<MaskPlayer> {
     switch(_currentEvent) {
       case null:
         return widget.uninitializedPlayerView ?? Container();
-      case MaskPlayerControllerEvent.loading:
-        return widget.loadingPlayerView ?? Container();
       case MaskPlayerControllerEvent.initialize:
         throw UnimplementedError("Please, implement initialize event");
       default:
