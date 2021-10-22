@@ -101,10 +101,8 @@ class MaskPlayerController {
   /// Change auto update of the player state.
   ///
   /// This is necessary in order to:
-  ///
-  /// 1) Use the [MaskPlayer] in [StatelessWidget].
-  ///
-  /// 2) Don't use [State.setState] if [MaskPlayer] is in [State].
+  /// * Use the [MaskPlayer] in [StatelessWidget].
+  /// * Don't use [State.setState] if [MaskPlayer] is in [State].
   void autoUpdatePlayer() =>
     _autoUpdateState = !_autoUpdateState;
 
@@ -116,7 +114,7 @@ class MaskPlayerController {
 
 /// Video player with mask.
 ///
-/// Uses [Canvas] to draw video.
+/// Uses [CustomPaint] to draw video.
 /// First, he takes a frame of the video and draws it.
 /// The video pixel will be drawn if it is white in the mask.
 class MaskPlayer extends StatefulWidget {
@@ -218,7 +216,7 @@ class _VideoPainter extends CustomPainter {
 
     if(boundary != null) {
       final image = await boundary.toImage();
-      canvas.drawImage(image, const Offset(10, 20), Paint());
+      canvas.drawImage(image, Offset(boundary.size.width, boundary.size.height), Paint());
     }
 
     // TODO: Implements mask paint part.
