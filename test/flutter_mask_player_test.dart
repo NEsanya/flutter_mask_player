@@ -3,7 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_mask_player/flutter_mask_player.dart';
 
 MaskPlayerController initializeController() =>
-    MaskPlayerController.network("http://upload.wikimedia.org/wikipedia/commons/7/79/Big_Buck_Bunny_small.ogv", null);
+    MaskPlayerController.network(
+      NetworkPlayerData(
+        url: "http://upload.wikimedia.org/wikipedia/commons/7/79/Big_Buck_Bunny_small.ogv"
+      )
+    );
 
 void main() {
   group("Controller tests", () {
