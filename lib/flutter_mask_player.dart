@@ -10,6 +10,22 @@ enum MaskPlayerControllerEvent {
   initialize
 }
 
+class AssetsPlayerData {
+  final String assetsPath;
+  final String? maskAssetsPath;
+
+  AssetsPlayerData({required this.assetsPath, this.maskAssetsPath});
+}
+
+class NetworkPlayerData {
+  final String url;
+  final String? headers;
+  final String? maskUrl;
+  final String? maskHeaders;
+
+  NetworkPlayerData({ required this.url, this.headers, this.maskUrl, this.maskHeaders });
+}
+
 /// Controller for the [MaskPlayer].
 ///
 /// Communicates with [MaskPlayer] using event messages [MaskPlayerControllerEvent].
@@ -19,9 +35,8 @@ class MaskPlayerController {
   bool _playing = false;
   bool _autoUpdateState = false;
 
-  @protected String? assetsPath;
-  @protected String? networkUrl;
-  @protected Map<String, dynamic>? networkHeaders;
+  @protected AssetsPlayerData? assetsData;
+  @protected NetworkPlayerData? networkData;
 
   /// Returns [Stream] with event messages.
   Stream<MaskPlayerControllerEvent> get events$ => _eventHandler.stream;
@@ -39,14 +54,14 @@ class MaskPlayerController {
   }
 
   /// Constructor where media creates from assets.
-  MaskPlayerController.assets(String path) : assetsPath = path;
+  ///
+  /// Used [AssetsPlayerData] to creates meta data of media.
+  MaskPlayerController.assets(AssetsPlayerData assetsPlayerData) : assetsData = assetsPlayerData;
 
   /// Constructor where media create from network with get http request.
   ///
-  /// Set [headers] if you use special url.
-  MaskPlayerController.network(String url, Map<String, dynamic>? headers)
-    : networkUrl = url
-    , networkHeaders = headers;
+  /// Used [NetworkPlayerData] to creates meta data of media.
+  MaskPlayerController.network(NetworkPlayerData networkPlayerData) : networkData = networkPlayerData;
 
   /// Magic function to update stream without update event state.
   ///
