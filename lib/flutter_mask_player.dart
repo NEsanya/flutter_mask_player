@@ -10,20 +10,14 @@ enum MaskPlayerControllerEvent {
   initialize
 }
 
-/// Types of media in [MaskPlayerController].
-enum _MaskPlayerControllerMediaType {
-  assets,
-  network
-}
-
 /// Controller for the [MaskPlayer].
 ///
 /// Communicates with [MaskPlayer] using event messages [MaskPlayerControllerEvent].
 class MaskPlayerController {
   final StreamController<MaskPlayerControllerEvent> _eventHandler = StreamController();
-  final _MaskPlayerControllerMediaType _maskPlayerControllerMediaType;
 
   bool _playing = false;
+  bool _autoUpdateState = false;
 
   @protected String? assetsPath;
   @protected String? networkUrl;
@@ -35,40 +29,70 @@ class MaskPlayerController {
   /// Returns [bool] of playing state.
   bool get isPlaying => _playing;
 
-  MaskPlayerController() : _maskPlayerControllerMediaType = _MaskPlayerControllerMediaType.assets {
+  /// Returns true if auto update of the player is enabled
+  ///
+  /// Default value is false.
+  bool get isAutoUpdates => _autoUpdateState;
+
+  MaskPlayerController() {
     throw Exception("Please, use special constructors to create controller, b~b~baka!");
   }
 
   /// Constructor where media creates from assets.
-  MaskPlayerController.assets(String path)
-      : _maskPlayerControllerMediaType = _MaskPlayerControllerMediaType.assets
-      , assetsPath = path;
+  MaskPlayerController.assets(String path) : assetsPath = path;
 
   /// Constructor where media create from network with get http request.
   ///
   /// Set [headers] if you use special url.
   MaskPlayerController.network(String url, Map<String, dynamic>? headers)
-    : _maskPlayerControllerMediaType = _MaskPlayerControllerMediaType.network
-    , networkUrl = url
+    : networkUrl = url
     , networkHeaders = headers;
 
   /// Magic function to update stream without update event state.
-  void _updatePlayer() =>
+  ///
+  /// Works if [isAutoUpdates] is true.
+  void _updatePlayer() {
+    if(isAutoUpdates) {
       _eventHandler.stream.last.then((event) => _eventHandler.add(event));
+    }
+  }
 
   /// Start media initialize.
   void initialize() {
     _eventHandler.add(MaskPlayerControllerEvent.initialize);
   }
 
+  /// Starts playing the video.
+  ///
+  /// If you use [autoUpdatePlayer], [MaskPlayer] will update.
+  /// If you don't use [autoUpdatePlayer], use [State.setState] to update [MaskPlayer].
   void play() {
     _playing = true;
     _updatePlayer();
   }
 
+  /// Stop playing the video.
+  ///
+  /// If you use [autoUpdatePlayer], [MaskPlayer] will update.
+  /// If you don't use [autoUpdatePlayer], use [State.setState] to update [MaskPlayer].
   void stop() {
     _playing = false;
     _updatePlayer();
+  }
+
+  /// Change auto update of the player state.
+  ///
+  /// This is necessary in order to:
+  ///
+  /// 1) Use the [MaskPlayer] in [StatelessWidget].
+  ///
+  /// 2) Don't use [State.setState] if [MaskPlayer] is in [State].
+  void autoUpdatePlayer() =>
+    _autoUpdateState = !_autoUpdateState;
+
+  /// Stop controller works.
+  void close() {
+    _eventHandler.close();
   }
 }
 
