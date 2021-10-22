@@ -2,7 +2,9 @@ library flutter_mask_player;
 
 import 'dart:async';
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:video_player/video_player.dart';
 
 /// Types of events in [MaskPlayerController].
 enum MaskPlayerControllerEvent {
@@ -27,9 +29,9 @@ class NetworkPlayerData {
   NetworkPlayerData({ required this.url, this.headers, this.maskUrl, this.maskHeaders });
 }
 
-/// Controller for the [MaskPlayer].
-///
-/// Communicates with [MaskPlayer] using event messages [MaskPlayerControllerEvent].
+  /// Controller for the [MaskPlayer].
+  ///
+  /// Communicates with [MaskPlayer] using event messages [MaskPlayerControllerEvent].
 class MaskPlayerController {
   final StreamController<MaskPlayerControllerEvent> _eventHandler = StreamController();
 
@@ -136,7 +138,11 @@ class MaskPlayer extends StatefulWidget {
 }
 
 class _MaskPlayerState extends State<MaskPlayer> {
-  final GlobalKey _repaintKey = GlobalKey();
+  final GlobalKey _videoKey = GlobalKey();
+  final GlobalKey _maskKey = GlobalKey();
+  VideoPlayerController? _controller;
+  VideoPlayerController? _maskController;
+
 
   StreamSubscription<MaskPlayerControllerEvent>? _controllerEventStreamSubscription;
   MaskPlayerControllerEvent? _currentEvent;
@@ -149,6 +155,16 @@ class _MaskPlayerState extends State<MaskPlayer> {
       _currentEvent = event;
       setState(() {});
     });
+
+    if(widget.controller.assetsData != null) {
+      _controller = VideoPlayerController.network(widget.controller.assetsData!.path);
+    } else if(widget.controller.networkData != null) {
+      _controller = VideoPlayerController.network(widget.controller.networkData!.url);
+    }
+
+    // TODO: Create mask controller implementation.
+
+    _controller!.initialize().then((value) => setState(() {}));
   }
 
   @override
@@ -164,9 +180,50 @@ class _MaskPlayerState extends State<MaskPlayer> {
       case null:
         return widget.uninitializedPlayerView ?? Container();
       case MaskPlayerControllerEvent.initialize:
-        throw UnimplementedError("Please, implement initialize event");
+        return Stack(
+          children: <Widget>[
+            _controller != null ? Visibility(
+              visible: false,
+              key: _videoKey,
+              child: VideoPlayer(_controller!),
+            ) : Container(),
+            _maskController != null ? Visibility(
+              visible: false,
+              key: _maskKey,
+              child: VideoPlayer(_maskController!),
+            ) : Container(),
+            CustomPaint(
+              painter: _VideoPainter(
+                videoKey: _videoKey,
+                maskKey: _maskKey,
+              ),
+            ),
+          ],
+        );
       default:
         throw UnimplementedError("If you that error, please create issue in github with this message. Controller event: $_currentEvent");
     }
   }
+}
+
+class _VideoPainter extends CustomPainter {
+  @protected final GlobalKey videoKey;
+  @protected final GlobalKey maskKey;
+
+  _VideoPainter({ required this.videoKey, required this.maskKey });
+
+  @override
+  void paint(Canvas canvas, Size size) async {
+    final boundary = videoKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+
+    if(boundary != null) {
+      final image = await boundary.toImage();
+      canvas.drawImage(image, const Offset(10, 20), Paint());
+    }
+
+    // TODO: Implements mask paint part.
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
